@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["python311", "chromium", "nss", "alsa-lib", "atk", "cups", "libdrm", "xorg.libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXfixes", "xorg.libXrandr", "mesa", "pango", "cairo", "glib"]
-
-[phases.install]
-cmds = ["pip install -r requirements.txt", "playwright install chromium"]
-
-[phases.deploy]
-cmd = "python scheduler.py"
