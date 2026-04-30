@@ -3,3 +3,4 @@ supabase==2.7.4
 httpx==0.27.2
 python-dotenv==1.0.0
 playwright==1.44.0
+greenlet==3.0.3
