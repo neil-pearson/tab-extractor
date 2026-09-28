@@ -61,16 +61,20 @@ class DB:
             logger.error(f"get_upcoming_races error: {e}")
             return []
 
-    def get_races_needing_results(self) -> list[dict]:
+    def get_races_needing_results(self, max_age_hours: int = 6) -> list[dict]:
         """
         Get races that have run but don't have a result yet.
-        Status = 'closed', no matching result row.
+        Status = 'closed', no matching result row, jumped within the last
+        max_age_hours. Older races are skipped: the TAB API returns nothing
+        for them, and retrying every one on every loop delays the snapshots.
         """
         try:
+            cutoff = (datetime.now(timezone.utc) - timedelta(hours=max_age_hours)).isoformat()
             res = (
                 self.client.table("races")
                 .select("*, results(id)")
                 .eq("status", "closed")
+                .gte("jump_time", cutoff)
                 .is_("results.id", "null")
                 .execute()
             )

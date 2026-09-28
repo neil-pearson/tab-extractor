@@ -48,6 +48,7 @@ RACING_TYPES  = {"R", "H", "G"}
 SNAPSHOT_AT_SECONDS = 30
 POLL_INTERVAL       = 10
 RESULT_DELAY        = 300
+RESULT_MAX_AGE_HOURS = 6   # stop retrying results for races older than this
 POOL_NAMES          = ["Quinella", "Exacta", "Trifecta"]
 
 _snapshotted: set[str] = set()
@@ -347,7 +348,7 @@ def main():
                 take_snapshot(tab, db, race)
 
         # Fetch results
-        for race in db.get_races_needing_results():
+        for race in db.get_races_needing_results(RESULT_MAX_AGE_HOURS):
             jump_time = datetime.fromisoformat(race["jump_time"].replace("Z", "+00:00"))
             if (now - jump_time).total_seconds() >= RESULT_DELAY:
                 fetch_result(tab, db, race)
