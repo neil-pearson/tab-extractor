@@ -149,16 +149,17 @@ def load_schedule(tab: TABClient, db: DB):
     )
 
 
-def parse_race_id(race_id: str) -> tuple[str, str, int]:
-    parts = race_id.split("-r")
-    race_number = int(parts[-1])
-    prefix = parts[0]
-    date_str = str(date.today())
-    rest = prefix.replace(f"{date_str}-", "", 1)
-    rest_parts = rest.split("-")
-    race_type = rest_parts[0]
-    venue = "-".join(rest_parts[1:])
-    return race_type, venue, race_number
+def parse_race_id(race_id: str) -> tuple[date, str, str, int]:
+    """Race IDs look like YYYY-MM-DD-<type>-<venue>-r<number>.
+
+    Returns (race_date, race_type, venue, race_number). The date comes from
+    the ID itself, not date.today(), so races from earlier days resolve to
+    the correct API path.
+    """
+    prefix, race_number = race_id.rsplit("-r", 1)
+    year, month, day, race_type, venue = prefix.split("-", 4)
+    race_date = date(int(year), int(month), int(day))
+    return race_date, race_type, venue, int(race_number)
 
 
 def get_pool_total(race_data: dict, pool_name: str) -> float:
@@ -176,14 +177,14 @@ def take_snapshot(tab: TABClient, db: DB, race: dict):
         return
 
     try:
-        race_type, venue, race_number = parse_race_id(race_id)
+        race_date, race_type, venue, race_number = parse_race_id(race_id)
     except Exception as e:
         logger.error(f"Cannot parse race_id {race_id}: {e}")
         return
 
     logger.info(f"Snapshotting {race_id} ({race_type}/{venue} R{race_number})...")
 
-    race_data = tab.get_race(race_type, venue, race_number)
+    race_data = tab.get_race(race_type, venue, race_number, race_date)
     if not race_data:
         logger.warning(f"No race data for {race_id}")
         return
@@ -213,7 +214,7 @@ def take_snapshot(tab: TABClient, db: DB, race: dict):
         )
         if not pool_exists:
             continue
-        raw = tab.get_approximates(race_type, venue, race_number, pool)
+        raw = tab.get_approximates(race_type, venue, race_number, pool, race_date)
         approx_data[pool] = extract_approximates(raw, pool) if raw else {}
 
     quinella_approx  = approx_data.get("Quinella", {})
@@ -283,13 +284,13 @@ def fetch_result(tab: TABClient, db: DB, race: dict):
         return
 
     try:
-        race_type, venue, race_number = parse_race_id(race_id)
+        race_date, race_type, venue, race_number = parse_race_id(race_id)
     except Exception as e:
         logger.error(f"Cannot parse race_id {race_id}: {e}")
         return
 
     logger.info(f"Fetching result for {race_id}...")
-    race_data = tab.get_race(race_type, venue, race_number)
+    race_data = tab.get_race(race_type, venue, race_number, race_date)
     if not race_data or not is_race_resulted(race_data):
         logger.info(f"Not yet resulted: {race_id}")
         return
