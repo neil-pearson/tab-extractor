@@ -65,8 +65,8 @@ class DB:
         """
         Get races that have run but don't have a result yet.
         Status = 'closed', no matching result row, jumped within the last
-        max_age_hours. Older races are skipped: the TAB API returns nothing
-        for them, and retrying every one on every loop delays the snapshots.
+        max_age_hours. Older races are skipped so a backlog of races that
+        never got a result can't slow down every loop and delay the snapshots.
         """
         try:
             cutoff = (datetime.now(timezone.utc) - timedelta(hours=max_age_hours)).isoformat()
