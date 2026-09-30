@@ -37,18 +37,21 @@ BASE = "https://api.beta.tab.com.au/v1/tab-info-service"
 COOKIE = "PASTE_YOUR_COOKIE_STRING_HERE"
 
 HEADERS = {
+    # These endpoints are called the way a page's own JS calls them (XHR/fetch),
+    # not the way a browser requests a page you type into the address bar.
+    # Akamai (TAB's bot protection) checks that the two match; the previous
+    # headers here (Accept: text/html, Sec-Fetch-Mode: navigate, no Origin/
+    # Referer) looked like a page load and got blocked with an empty body.
+    # This set matches test_api.py, which is the script that originally
+    # confirmed these endpoints work.
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-AU,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "sec-ch-ua": '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": '"Windows"',
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Upgrade-Insecure-Requests": "1",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-AU,en;q=0.9",
+    "Origin": "https://www.tab.com.au",
+    "Referer": "https://www.tab.com.au/racing",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-site",
     "Cookie": COOKIE,
 }
 
